@@ -1,0 +1,11 @@
+[project]
+name = "tetr.io-bot"
+version = "0.1.0"
+description = "An AI agent that autonomously plays Tetris on TETR.IO using screen capture and keyboard simulation"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "mss>=10.1.0",
+    "opencv-python>=4.13.0.92",
+    "pydirectinput>=1.0.4",
+]
