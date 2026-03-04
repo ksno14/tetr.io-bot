@@ -57,7 +57,7 @@ tetris-ai/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/ksno14/tetr.io_bot.git
+git clone https://github.com/ksno14/tetr.io-bot.git
 cd tetr.io_bot
 ```
 
