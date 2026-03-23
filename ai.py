@@ -6,10 +6,10 @@ from config import BOARD_COLUMNS
 class TetrisAI:
     def __init__(
         self,
-        height_weight: float = 0.510066,
-        lines_weight: float = 0.760666,
-        holes_weight: float = 0.35663,
-        bumpiness_weight: float = 0.184483,
+        height_weight: float = 0.5,
+        lines_weight: float = 0.8,
+        holes_weight: float = 0.3,
+        bumpiness_weight: float = 0.2,
     ):
         self.height_weight = height_weight
         self.lines_weight = lines_weight
@@ -96,3 +96,24 @@ class TetrisAI:
         if move is None:
             return {"rotations": 0, "col": 0, "piece": piece_shape}
         return move
+
+    def get_best_move_two(
+        self, piece1_shape: list, piece2_shape: list, grid: TetrisGrid
+    ) -> tuple[dict, bool]:
+        move1 = self._best(grid, piece1_shape)
+        move2 = self._best(grid, piece2_shape)
+
+        score1 = self._score_of_move(grid, move1) if move1 else float("-inf")
+        score2 = self._score_of_move(grid, move2) if move2 else float("-inf")
+
+        if move2 is not None and score2 > score1:
+            return move2, True
+
+        return (move1 or {"rotations": 0, "col": 0, "piece": piece1_shape}), False
+
+    def _score_of_move(self, grid: TetrisGrid, move: dict) -> float:
+        test_grid = deepcopy(grid)
+        drop_row = test_grid.drop_height(move["piece"], move["col"])
+        test_grid.place_piece(move["piece"], drop_row, move["col"])
+        test_grid.clear_lines()
+        return self._score(test_grid)

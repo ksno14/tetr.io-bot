@@ -4,12 +4,34 @@ from vision import TetrisVision
 from ai import TetrisAI
 from controller import TetrisController
 from grid import TetrisGrid
-from config import PIECES, BOARD_COLUMNS, SPAWN_COL, PIECE_DELAY
+from config import PIECES, SPAWN_COL
 
 
 class TetrisAgent:
     def __init__(self, debug: bool = True):
         self.debug = debug
+
+    def _wait_for_game_start(self, vision):
+        print("Leyendo cola inicial...")
+
+        queue = vision.get_next_queue()
+
+        while not all(p != "?" for p in queue):
+            time.sleep(0.5)
+            queue = vision.get_next_queue()
+
+        print(f"Cola inicial detectada: {queue}")
+
+        while True:
+            time.sleep(0.2)
+            new_queue = vision.get_next_queue()
+
+            if not all(p != "?" for p in new_queue):
+                continue
+
+            if new_queue[-1] != queue[-1]:
+                print("¡Juego iniciado detectado!")
+                return queue
 
     def play(self):
         try:
@@ -21,23 +43,14 @@ class TetrisAgent:
             controller = TetrisController()
             grid = TetrisGrid()
 
-            print("Buscando cola de piezas inicial...")
-            queue = vision.get_next_queue()
-
-            while not all(p != "?" for p in queue):
-                print("Esperando a que TODAS las piezas sean visibles...")
-                time.sleep(0.5)
-                queue = vision.get_next_queue()
-
-            print(f"Cola detectada: {queue}. Sincronizando con HOLD...")
-
-            controller.hold_piece()
+            queue = self._wait_for_game_start(vision)
 
             queue_index = 0
             move_count = 0
             next_queue = None
-            while True:
+            hold_piece = None
 
+            while True:
                 if queue_index >= len(queue):
                     if next_queue is not None:
                         print(f"Usando cola pre-cargada: {next_queue}")
@@ -57,14 +70,14 @@ class TetrisAgent:
                     queue_index = 0
 
                 current_piece = queue[queue_index]
-                queue_index += 1
-
-                shape = PIECES.get(current_piece)
+                current_shape = PIECES.get(current_piece)
 
                 if self.debug:
-                    print(f"\n[{move_count}] Pieza actual: {current_piece}")
+                    print(
+                        f"\n[{move_count}] Pieza actual: {current_piece} | Hold: {hold_piece}"
+                    )
 
-                if queue_index >= len(queue) and next_queue is None:
+                if queue_index >= len(queue) - 1 and next_queue is None:
                     print("Última pieza de la ronda — pre-cargando siguiente cola...")
                     candidate = vision.get_next_queue()
                     while not all(p != "?" for p in candidate):
@@ -73,8 +86,59 @@ class TetrisAgent:
                         candidate = vision.get_next_queue()
                     next_queue = candidate
                     print(f"Cola siguiente pre-cargada: {next_queue}")
+                use_hold = False
 
-                move = ai.get_best_move(shape, grid)
+                if hold_piece is None:
+                    next_index = queue_index + 1
+                    if next_index < len(queue):
+                        next_piece = queue[next_index]
+                    elif next_queue is not None and len(next_queue) > 0:
+                        next_piece = next_queue[0]
+                    else:
+                        next_piece = None
+
+                    if next_piece is not None:
+                        next_shape = PIECES.get(next_piece)
+                        move, use_hold = ai.get_best_move_two(
+                            current_shape, next_shape, grid
+                        )
+
+                        if use_hold:
+                            if self.debug:
+                                print(
+                                    f"    → Hold vacío: holdeando {current_piece}, jugando {next_piece}"
+                                )
+                            controller.hold_piece()
+                            hold_piece = current_piece
+                            queue_index += 1
+                            current_piece = next_piece
+                            current_shape = next_shape
+                    else:
+                        move = ai.get_best_move(current_shape, grid)
+
+                else:
+                    hold_shape = PIECES.get(hold_piece)
+                    move, use_hold = ai.get_best_move_two(
+                        current_shape, hold_shape, grid
+                    )
+
+                    if use_hold:
+                        if self.debug:
+                            print(
+                                f"    → Hold ocupado: holdeando {current_piece}, jugando {hold_piece}"
+                            )
+                        controller.hold_piece()
+                        old_hold = hold_piece
+                        hold_piece = current_piece
+                        current_piece = old_hold
+                        current_shape = hold_shape
+                    else:
+                        if self.debug:
+                            print(
+                                f"    → Jugando actual {current_piece}, hold {hold_piece} se conserva"
+                            )
+
+                queue_index += 1
 
                 if self.debug:
                     print(
@@ -98,8 +162,8 @@ class TetrisAgent:
                     print("! Game over detectado en grid interno !")
                     break
 
-                time.sleep(PIECE_DELAY)
                 move_count += 1
+
         except KeyboardInterrupt:
             print("\n Bot detenido por el usuario")
 
