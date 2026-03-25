@@ -45,12 +45,18 @@ class TetrisAgent:
 
             queue = self._wait_for_game_start(vision)
 
+            start_time = time.time()
+            MAX_DURATION = 120  # segundos (2 minutos)
+
             queue_index = 0
             move_count = 0
             next_queue = None
             hold_piece = None
 
             while True:
+                if time.time() - start_time > MAX_DURATION:
+                    print("Tiempo límite alcanzado (2 minutos). Deteniendo agente...")
+                    break
                 if queue_index >= len(queue):
                     if next_queue is not None:
                         print(f"Usando cola pre-cargada: {next_queue}")
@@ -160,8 +166,7 @@ class TetrisAgent:
 
                 if grid.game_over():
                     print("! Game over detectado en grid interno !")
-                    break
-
+                    break         
                 move_count += 1
 
         except KeyboardInterrupt:
