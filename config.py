@@ -46,5 +46,5 @@ SPAWN_COL = {
     "Z": [3, 4, 3, 3],
 }
 
-PIECE_DELAY = 0.35
 KEY_DELAY = 0.05
+PIECE_DELAY = 0.1
