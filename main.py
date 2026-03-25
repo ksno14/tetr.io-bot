@@ -15,7 +15,7 @@ class TetrisAgent:
             print(msg)
 
     def _wait_for_game_start(self, vision):
-        self._log("Leyendo cola inicial...")
+        print("Leyendo cola inicial...")
 
         queue = vision.get_next_queue()
 
@@ -23,7 +23,7 @@ class TetrisAgent:
             time.sleep(0.5)
             queue = vision.get_next_queue()
 
-        self._log(f"Cola inicial detectada: {queue}")
+        print(f"Cola inicial detectada: {queue}")
 
         while True:
             time.sleep(0.2)
@@ -33,7 +33,7 @@ class TetrisAgent:
                 continue
 
             if new_queue[-1] != queue[-1]:
-                self._log("¡Juego iniciado detectado!")
+                print("¡Juego iniciado detectado!")
                 return queue
 
     def play(self):
@@ -41,7 +41,7 @@ class TetrisAgent:
             print("\nPrepara el juego. Tienes 3 segundos...")
             time.sleep(3)
 
-            vision = TetrisVision(debug_save=True)
+            vision = TetrisVision(debug=self.debug)
             ai = TetrisAI()
             controller = TetrisController()
             grid = TetrisGrid(debug=self.debug)
@@ -49,7 +49,7 @@ class TetrisAgent:
             queue = self._wait_for_game_start(vision)
 
             start_time = time.time()
-            MAX_DURATION = 120  # segundos
+            MAX_DURATION = 120  # segundos (2 minutos)
 
             queue_index = 0
             move_count = 0
@@ -183,5 +183,5 @@ class TetrisAgent:
 
 
 if __name__ == "__main__":
-    agent = TetrisAgent(debug=True)
+    agent = TetrisAgent(debug=False)
     agent.play()

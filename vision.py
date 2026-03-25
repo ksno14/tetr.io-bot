@@ -5,9 +5,9 @@ from config import NEXT_REGION, NUM_NEXT_PIECES, PIECE_COLORS
 
 
 class TetrisVision:
-    def __init__(self,debug_save=False):
+    def __init__(self,debug: bool = False):
         self.sct = mss.mss()
-        self.debug_save = debug_save
+        self.debug = debug
         self._saved_once = False
 
     def capture_region(self, region: dict) -> np.ndarray:
@@ -15,7 +15,7 @@ class TetrisVision:
         img = np.array(raw)
         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
-        if self.debug_save and not self._saved_once:
+        if self.debug and not self._saved_once:
             cv2.imwrite("debug_next_region.png", img)
             print("Imagen guardada como debug_next_region.png")
             self._saved_once = True
