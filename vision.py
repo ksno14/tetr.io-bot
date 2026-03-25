@@ -5,13 +5,22 @@ from config import NEXT_REGION, NUM_NEXT_PIECES, PIECE_COLORS
 
 
 class TetrisVision:
-    def __init__(self):
+    def __init__(self,debug_save=False):
         self.sct = mss.mss()
+        self.debug_save = debug_save
+        self._saved_once = False
 
     def capture_region(self, region: dict) -> np.ndarray:
         raw = self.sct.grab(region)
         img = np.array(raw)
-        return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+
+        if self.debug_save and not self._saved_once:
+            cv2.imwrite("debug_next_region.png", img)
+            print("Imagen guardada como debug_next_region.png")
+            self._saved_once = True
+
+        return img    
 
     def _get_mask(self, hsv_img: np.ndarray, piece: str) -> np.ndarray:
         lo, hi = PIECE_COLORS[piece]

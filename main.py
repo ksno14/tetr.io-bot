@@ -38,7 +38,7 @@ class TetrisAgent:
             print("\nPrepara el juego. Tienes 3 segundos...")
             time.sleep(3)
 
-            vision = TetrisVision()
+            vision = TetrisVision(debug_save=True)
             ai = TetrisAI()
             controller = TetrisController()
             grid = TetrisGrid()
